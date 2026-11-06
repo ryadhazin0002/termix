@@ -16,23 +16,25 @@ export default function HomePage() {
 
   // Redirect to dashboard if user is already logged in
   useEffect(() => {
-    if (!loading && user) router.replace('/dashboard')
-  }, [user, loading, router])
+    if (!loading && user) {
+      window.location.href = '/dashboard'
+    }
+  }, [user, loading])
 
-  // Handle redirect sign-in results (standard for mobile devices)
+  // Handle redirect sign-in results (fallback if popup was blocked)
   useEffect(() => {
     if (!auth) return
     getRedirectResult(auth)
       .then((res) => {
         if (res?.user) {
-          router.replace('/dashboard')
+          window.location.href = '/dashboard'
         }
       })
       .catch((err) => {
         console.error('Redirect sign-in error:', err)
         handleError(err)
       })
-  }, [router])
+  }, [])
 
   const handleError = (err: any) => {
     const code = err?.code || ''
@@ -64,30 +66,27 @@ export default function HomePage() {
     setIsSubmitting(true)
 
     try {
-      const isMobile =
-        typeof navigator !== 'undefined' &&
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-
-      // Mobile browsers frequently block cross-origin popups; use seamless redirect on mobile
-      if (isMobile) {
-        await signInWithRedirect(auth, googleProvider)
+      // Use popup first on both mobile and desktop.
+      // Modern iOS Safari and Android Chrome handle popups triggered by touch events cleanly,
+      // avoiding cross-origin third-party cookie blocking that breaks signInWithRedirect.
+      const res = await signInWithPopup(auth, googleProvider)
+      if (res?.user) {
+        window.location.href = '/dashboard'
         return
       }
-
-      // On desktop, try popup first with graceful fallback to redirect if blocked
-      try {
-        await signInWithPopup(auth, googleProvider)
-        router.replace('/dashboard')
-      } catch (popupErr: any) {
-        if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/cancelled-popup-request') {
+    } catch (popupErr: any) {
+      console.warn('Popup login attempt error:', popupErr)
+      const code = popupErr?.code || ''
+      if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request') {
+        try {
           await signInWithRedirect(auth, googleProvider)
           return
+        } catch (redirectErr: any) {
+          handleError(redirectErr)
         }
-        throw popupErr
+      } else {
+        handleError(popupErr)
       }
-    } catch (err: any) {
-      console.error('Login failed', err)
-      handleError(err)
     } finally {
       setIsSubmitting(false)
     }
