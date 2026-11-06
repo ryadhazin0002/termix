@@ -30,8 +30,16 @@ installerRouter.get('/agent-files/:file', (req, res) => {
     return res.json(pkg)
   }
 
-  const filePath = path.resolve(__dirname, '../../../agent/dist', filename)
-  if (fs.existsSync(filePath)) {
+  const candidates = [
+    path.resolve(__dirname, '../../../agent/dist', filename),
+    path.resolve(__dirname, '../../agent/dist', filename),
+    path.resolve(__dirname, '../agent/dist', filename),
+    path.resolve(process.cwd(), 'apps/agent/dist', filename),
+    path.resolve(process.cwd(), '../agent/dist', filename),
+    path.resolve(process.cwd(), 'dist', filename),
+  ]
+  const filePath = candidates.find((p) => fs.existsSync(p))
+  if (filePath) {
     res.setHeader('Content-Type', 'application/javascript')
     return res.sendFile(filePath)
   }
