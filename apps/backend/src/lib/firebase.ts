@@ -20,8 +20,19 @@ if (!admin.apps.length) {
     })
   }
 
-  if (privateKey && privateKey.includes('\\n')) {
-    privateKey = privateKey.replace(/\\n/g, '\n')
+  if (privateKey) {
+    privateKey = privateKey.trim()
+    // Strip surrounding quotes if copied literally from .env into cloud provider env
+    if (
+      (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+      (privateKey.startsWith("'") && privateKey.endsWith("'"))
+    ) {
+      privateKey = privateKey.slice(1, -1)
+    }
+    if (privateKey.includes('\\n')) {
+      privateKey = privateKey.replace(/\\n/g, '\n')
+    }
+    privateKey = privateKey.trim()
   }
 
   const options: admin.AppOptions = {
