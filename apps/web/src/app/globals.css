@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --terminal-bg: #0d0d0d;
+  --terminal-fg: #d4d4d4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* xterm overrides */
+.xterm-viewport {
+  overflow-y: auto !important;
+}
+.xterm {
+  height: 100%;
+  width: 100%;
+}

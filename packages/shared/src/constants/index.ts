@@ -1,0 +1,8 @@
+export const AGENT_VERSION = '1.0.0'
+export const HEARTBEAT_INTERVAL_MS = 15_000
+export const OFFLINE_THRESHOLD_MS = 45_000
+export const MAX_TERMINAL_SESSIONS_PER_DEVICE = 10
+export const MAX_DEVICES_PER_USER = 50
+export const DEFAULT_TERMINAL_COLS = 220
+export const DEFAULT_TERMINAL_ROWS = 50
+export const MAX_SCROLLBACK_LINES = 10_000
