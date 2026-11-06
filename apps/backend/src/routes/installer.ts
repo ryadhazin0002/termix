@@ -148,13 +148,23 @@ EOF
 
 echo "✅ Configuration saved to $INSTALL_DIR/.env"
 
-# Download standalone agent files
-echo "📥 Downloading Termix Agent files from $SERVER_URL..."
-curl -sSL "$SERVER_URL/api/agent-files/package.json" -o "$INSTALL_DIR/package.json"
-curl -sSL "$SERVER_URL/api/agent-files/index.js" -o "$INSTALL_DIR/index.js"
-curl -sSL "$SERVER_URL/api/agent-files/terminal.js" -o "$INSTALL_DIR/terminal.js"
-curl -sSL "$SERVER_URL/api/agent-files/stats.js" -o "$INSTALL_DIR/stats.js"
-curl -sSL "$SERVER_URL/api/agent-files/fileManager.js" -o "$INSTALL_DIR/fileManager.js"
+# Download standalone agent files (with automatic GitHub Raw fallback)
+echo "📥 Downloading Termix Agent files..."
+RAW_BASE="https://raw.githubusercontent.com/ryadhazin0002/termix/master/apps/agent/standalone"
+
+download_file() {
+  local name="\$1"
+  local dest="\$INSTALL_DIR/\$name"
+  curl -sSLf "\$SERVER_URL/api/agent-files/\$name" -o "\$dest" 2>/dev/null || \
+  curl -sSLf "\$RAW_BASE/\$name" -o "\$dest" 2>/dev/null || \
+  curl -sSL "\$RAW_BASE/\$name" -o "\$dest"
+}
+
+download_file "package.json"
+download_file "index.js"
+download_file "terminal.js"
+download_file "stats.js"
+download_file "fileManager.js"
 
 # Install npm dependencies
 cd "$INSTALL_DIR"
