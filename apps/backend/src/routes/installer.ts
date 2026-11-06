@@ -2,6 +2,7 @@ import { Router } from 'express'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
+import { AGENT_SOURCES } from './agentSources.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -30,6 +31,13 @@ installerRouter.get('/agent-files/:file', (req, res) => {
     return res.json(pkg)
   }
 
+  // 1. Direct in-memory bundle delivery (100% reliable across all cloud environments)
+  if (AGENT_SOURCES[filename]) {
+    res.setHeader('Content-Type', 'application/javascript')
+    return res.send(AGENT_SOURCES[filename])
+  }
+
+  // 2. Filesystem fallback
   const candidates = [
     path.resolve(__dirname, '../../../agent/dist', filename),
     path.resolve(__dirname, '../../agent/dist', filename),
@@ -48,7 +56,8 @@ installerRouter.get('/agent-files/:file', (req, res) => {
 
 installerRouter.get('/install.sh', (req, res) => {
   const host = req.get('host') || 'localhost:3001'
-  const protocol = req.protocol || 'http'
+  const isSecure = req.headers['x-forwarded-proto'] === 'https' || host.includes('onrender.com') || req.secure
+  const protocol = isSecure ? 'https' : 'http'
   const defaultServer = `${protocol}://${host}`
 
   const serverUrl = (req.query.server as string) || defaultServer
@@ -177,7 +186,8 @@ fi
 
 installerRouter.get('/install.ps1', (req, res) => {
   const host = req.get('host') || 'localhost:3001'
-  const protocol = req.protocol || 'http'
+  const isSecure = req.headers['x-forwarded-proto'] === 'https' || host.includes('onrender.com') || req.secure
+  const protocol = isSecure ? 'https' : 'http'
   const defaultServer = `${protocol}://${host}`
 
   const serverUrl = (req.query.server as string) || defaultServer
